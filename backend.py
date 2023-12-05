@@ -14,7 +14,7 @@ def cadastrar_usuario_json():
         sucesso, mensagem_erro = cadastrar_usuario(nome, senha, email)
 
         if sucesso:
-            return jsonify({'mensagem': 'Usuário cadastrado com sucesso'})
+            return jsonify({'email':email,'nome':nome })
         else:
             return jsonify({'mensagem': f'Erro ao cadastrar usuário: {mensagem_erro}'}), 500
     else:
@@ -31,7 +31,7 @@ def login_json():
         if verificar_existencia_usuario(email,senha):
             return login_usuario(email,senha)
         else:
-            return jsonify({'mensagem': 'Usuário não encontrado'}), 404
+            return jsonify({'email': 'Usuário não encontrado'}), 404
     else:
         return jsonify({'mensagem': 'Campo "email" ausente'}), 400
 
@@ -63,15 +63,17 @@ def cadastrar_partida():
 @app.route('/partidas_disponiveis', methods=['GET'])
 def partidas_disponiveis():
     try:
-        partidas_disponiveis = Partida.query.filter(Partida.limite_jogadores > db.func.count(partida_jogador.jogador_id)).group_by(Partida.id).all()
+        partidas_disponiveis = Partida.query.outerjoin(PartidaJogador).group_by(Partida.id).all()
 
         resultados_json = []
         for partida in partidas_disponiveis:
+            jogadores_atuais = len(partida.jogadores) if partida.jogadores else 0
+
             resultado = {
                 'id': partida.id,
                 'mestre_id': partida.mestre_id,
                 'limite_jogadores': partida.limite_jogadores,
-                'jogadores_atuais': len(partida.jogadores),
+                'jogadores_atuais': jogadores_atuais,
             }
             resultados_json.append(resultado)
 
@@ -79,6 +81,22 @@ def partidas_disponiveis():
 
     except Exception as e:
         return jsonify({'mensagem': f'Erro ao obter partidas disponíveis: {str(e)}'}), 500
+    
+@app.route('/cadastrar_jogador', methods=['POST'])
+def cadastrar_jogador():
+    try:
+        data = request.json
+        partida_id = data.get('partida_id')
+        jogador_email = data.get('jogador_email')
 
+        if not partida_id or not jogador_email:
+            return jsonify({'mensagem': 'Os parâmetros partida_id e jogador_email são obrigatórios'}), 400
+
+        resultado = adicionar_jogador_a_partida(partida_id, jogador_email)
+
+        return resultado
+
+    except Exception as e:
+        return jsonify({'mensagem': f'Erro ao cadastrar jogador: {str(e)}'}), 500
 
 app.run(debug=True,host='0.0.0.0')

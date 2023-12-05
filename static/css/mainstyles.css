@@ -7,24 +7,29 @@ body {
 
 .container {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* 100% da altura da viewport */
+}
+
+header {
+    background-color: #333;
+    padding: 10px;
+    width: 100%;
 }
 
 .sidebar {
-    width: 200px;
-    background-color: #333;
-    color: #fff;
-    padding: 20px;
-    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
 }
 
 .sidebar button {
-    display: block;
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 10px;
     background-color: #007BFF;
     color: #fff;
     border: none;
+    padding: 10px;
+    margin-right: 10px;
     border-radius: 4px;
     cursor: pointer;
 }
@@ -34,9 +39,11 @@ body {
 }
 
 .content {
-    flex-grow: 1;
-    padding: 20px;
-    box-sizing: border-box;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: auto;
 }
 
 #listaPartidas {
@@ -45,13 +52,47 @@ body {
 }
 
 #listaPartidas li {
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #fff;
+    margin: auto;
+    padding: 5px;
+    background-color: #f0f0f0;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
 
 #listaPartidas li:hover {
-    background-color: #f0f0f0;
+    background-color: #e0e0e0;
+}
+
+.partida-item {
+    border: 1px solid gray;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.partida-info {
+    border: 3px solid gray;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.partida-info span {
+    margin-bottom: 5px;
+}
+
+.btn-entrar {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-entrar:hover {
+    background-color: #0056b3;
 }

@@ -11,3 +11,7 @@ def cadastro_page():
 @app.route('/main')
 def main():
     return render_template('main.html')
+
+@app.route('/nova_partida')
+def nova_partida():
+    return render_template('criarpartida.html')

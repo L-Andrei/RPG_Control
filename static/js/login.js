@@ -4,10 +4,11 @@ $(document).ready(function () {
 
         var email = $('#email').val();
         var senha = $('#senha').val();
+        meuip = sessionStorage.getItem('meuip');
 
         $.ajax({
             type: 'POST',
-            url: '/login_json',
+            url: `http://${meuip}:5000/login_json`,
             contentType: 'application/json;charset=UTF-8',
             data: JSON.stringify({
                 'email': email,
@@ -16,10 +17,14 @@ $(document).ready(function () {
             success: function (data) {
                 console.log(data);
                 if (data.email) {
-                    sessionStorage.setItem('userEmail', data.email);
-                    sessionStorage.setItem('userEmail', data.nome);
+                    sessionStorage.setItem('email', data.email);
+                    sessionStorage.setItem('nome', data.nome);
+                    localStorage.getItem('email');
+                    localStorage.getItem('nome');
+
                     
-                    alert('Login bem-sucedido! Email: ' + data.email + ', Nome: ' + data.nome);
+                    alert('Login bem-sucedido! ' + data.nome);
+                    window.location.assign('/main');
                 } else {
                     alert('Usuário não encontrado.');
                 }

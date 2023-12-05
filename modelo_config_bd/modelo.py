@@ -34,10 +34,10 @@ def verificar_existencia_usuario(email,senha):
     
 def login_usuario(email,senha):
     usuario = Usuario.query.filter_by(email=email,senha=senha).first()
-
+    print('a')
     if usuario:
-        session['email'] = email
-        return jsonify({'email': usuario.email, 'nome': usuario.nome})
+        data = jsonify({'email': usuario.email, 'nome': usuario.nome})
+        return data
     else:
         return jsonify({'mensagem': 'Usuário não encontrado'}), 404
 
@@ -48,28 +48,36 @@ class Partida(db.Model):
     jogadores = db.relationship('Usuario', secondary='partida_jogador', backref='partidas')
     limite_jogadores = db.Column(db.Integer, nullable=False, default=5)
 
-    def adicionar_jogador(self, jogador_id):
+def adicionar_jogador_a_partida(partida_id, jogador_email):
+    try:
+        # Verifique se a partida existe
+        partida = Partida.query.get(partida_id)
+        if not partida:
+            return jsonify({'mensagem': 'Partida não encontrada'}), 404
+
         # Verifique se o jogador existe
-        jogador = Usuario.query.filter_by(email=jogador_id).first()
-
+        jogador = Usuario.query.get(jogador_email)
         if not jogador:
-            return False, "Jogador não encontrado."
+            return jsonify({'mensagem': 'Jogador não encontrado'}), 404
 
-        # Verifique se o número máximo de jogadores foi atingido
-        if len(self.jogadores) >= self.limite_jogadores:
-            return False, "Número máximo de jogadores atingido."
+        # Verifique se o jogador já está na partida
+        if jogador in partida.jogadores:
+            return jsonify({'mensagem': 'Jogador já está na partida'}), 400
+
+        # Verifique se a partida atingiu o limite de jogadores
+        if len(partida.jogadores) >= partida.limite_jogadores:
+            return jsonify({'mensagem': 'A partida atingiu o limite de jogadores'}), 400
 
         # Adicione o jogador à partida
-        self.jogadores.append(jogador)
+        partida_jogador = PartidaJogador(partida_id=partida_id, jogador_id=jogador_email)
+        db.session.add(partida_jogador)
+        db.session.commit()
 
-        try:
-            db.session.commit()
-            return True, "Jogador adicionado à partida com sucesso."
-        except Exception as e:
-            db.session.rollback()
-            return False, f"Erro ao adicionar jogador à partida: {str(e)}"
-        finally:
-            db.session.close()
+        return jsonify({'mensagem': f'Jogador {jogador_email} adicionado à partida {partida_id}'}), 200
+
+    except Exception as e:
+        return jsonify({'mensagem': f'Erro ao adicionar jogador à partida: {str(e)}'}), 500
+
 
 def cadastrar_partida(mestre_id, limite_jogadores):
         mestre = Usuario.query.filter_by(email=mestre_id).first()
@@ -109,9 +117,9 @@ def criar_personagem(usuario_email, vida, mana, level):
         else:
             return jsonify({'mensagem': 'Usuário não encontrado'}), 404
 
-partida_jogador = db.Table('partida_jogador',
-                db.Column('partida_id', db.Integer, db.ForeignKey('partida.id'), primary_key=True),
-                db.Column('jogador_id', db.Integer, db.ForeignKey('usuario.email'), primary_key=True))
+class PartidaJogador(db.Model):
+    partida_id = db.Column(db.Integer, db.ForeignKey('partida.id'), primary_key=True)
+    jogador_id = db.Column(db.String(50), db.ForeignKey('usuario.email'), primary_key=True)
 
 with app.app_context():
     db.create_all()

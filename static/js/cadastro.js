@@ -5,14 +5,15 @@ $(document).ready(function () {
         var nome = $('#nome').val();
         var senha = $('#senha').val();
         var email = $('#email').val();
+        meuip = sessionStorage.getItem('meuip');
 
         $.ajax({
             type: 'POST',
-            url: '/cadastrar_usuario_json',
+            url: `http://${meuip}:5000/cadastrar_usuario_json`,
             contentType: 'application/json;charset=UTF-8',
             data: JSON.stringify({
                 'nome': nome,
-                'senha': parseInt(senha),
+                'senha': senha,
                 'email': email
             }),
             success: function (data) {
@@ -21,9 +22,11 @@ $(document).ready(function () {
                     // Salvar informações na sessão local
                     localStorage.setItem('email', data.email);
                     localStorage.setItem('nome', data.nome);
+                    localStorage.getItem('email');
+                    localStorage.getItem('nome');
 
                     alert('Usuário cadastrado com sucesso!');
-                    // Redirecionar para a página de login ou fazer outra ação
+                    window.location.assign("main");
                 } else {
                     alert('Erro ao cadastrar usuário.');
                 }
