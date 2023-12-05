@@ -7,3 +7,7 @@ def index():
 @app.route('/cadastro')
 def cadastro_page():
     return render_template('cadastro.html')
+
+@app.route('/main')
+def main():
+    return render_template('main.html')

@@ -46,6 +46,49 @@ class Partida(db.Model):
     mestre_id = db.Column(db.Integer, db.ForeignKey('usuario.email'), nullable=False)
     mestre = db.relationship('Usuario', foreign_keys=[mestre_id])
     jogadores = db.relationship('Usuario', secondary='partida_jogador', backref='partidas')
+    limite_jogadores = db.Column(db.Integer, nullable=False, default=5)
+
+    def adicionar_jogador(self, jogador_id):
+        # Verifique se o jogador existe
+        jogador = Usuario.query.filter_by(email=jogador_id).first()
+
+        if not jogador:
+            return False, "Jogador não encontrado."
+
+        # Verifique se o número máximo de jogadores foi atingido
+        if len(self.jogadores) >= self.limite_jogadores:
+            return False, "Número máximo de jogadores atingido."
+
+        # Adicione o jogador à partida
+        self.jogadores.append(jogador)
+
+        try:
+            db.session.commit()
+            return True, "Jogador adicionado à partida com sucesso."
+        except Exception as e:
+            db.session.rollback()
+            return False, f"Erro ao adicionar jogador à partida: {str(e)}"
+        finally:
+            db.session.close()
+
+def cadastrar_partida(mestre_id, limite_jogadores):
+        mestre = Usuario.query.filter_by(email=mestre_id).first()
+
+        if not mestre:
+            return False, "Mestre não encontrado."
+        nova_partida = Partida(mestre_id=mestre_id, limite_jogadores=limite_jogadores)
+
+        try:
+            db.session.add(nova_partida)
+            db.session.commit()
+            return True, "Partida cadastrada com sucesso."
+        except Exception as e:
+            db.session.rollback()
+            return False, f"Erro ao cadastrar a partida: {str(e)}"
+        finally:
+            db.session.close()
+
+    
 
 class Personagem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -53,8 +96,9 @@ class Personagem(db.Model):
     mana = db.Column(db.Integer, nullable=False)
     level = db.Column(db.Integer, nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.email'), nullable=False)
+    
 
-    def criar_personagem(usuario_email, vida, mana, level):
+def criar_personagem(usuario_email, vida, mana, level):
         usuario = Usuario.query.get(usuario_email)
 
         if usuario:

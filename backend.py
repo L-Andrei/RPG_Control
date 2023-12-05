@@ -35,4 +35,50 @@ def login_json():
     else:
         return jsonify({'mensagem': 'Campo "email" ausente'}), 400
 
+@app.route('/cadastrar_partida', methods=['POST'])
+def cadastrar_partida():
+    try:
+        dados_partida = request.json
+        mestre_id = dados_partida.get('mestre_id')
+        limite_jogadores = dados_partida.get('limite_jogadores')
+
+        mestre = Usuario.query.filter_by(email=mestre_id).first()
+        if not mestre:
+            return jsonify({'mensagem': 'Mestre não encontrado.'}), 404
+
+        nova_partida = Partida(mestre_id=mestre_id, limite_jogadores=limite_jogadores)
+
+        db.session.add(nova_partida)
+        db.session.commit()
+
+        return jsonify({'mensagem': 'Partida cadastrada com sucesso.'}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'mensagem': f'Erro ao cadastrar a partida: {str(e)}'}), 500
+
+    finally:
+        db.session.close()
+
+@app.route('/partidas_disponiveis', methods=['GET'])
+def partidas_disponiveis():
+    try:
+        partidas_disponiveis = Partida.query.filter(Partida.limite_jogadores > db.func.count(partida_jogador.jogador_id)).group_by(Partida.id).all()
+
+        resultados_json = []
+        for partida in partidas_disponiveis:
+            resultado = {
+                'id': partida.id,
+                'mestre_id': partida.mestre_id,
+                'limite_jogadores': partida.limite_jogadores,
+                'jogadores_atuais': len(partida.jogadores),
+            }
+            resultados_json.append(resultado)
+
+        return jsonify({'partidas_disponiveis': resultados_json})
+
+    except Exception as e:
+        return jsonify({'mensagem': f'Erro ao obter partidas disponíveis: {str(e)}'}), 500
+
+
 app.run(debug=True,host='0.0.0.0')
